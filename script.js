@@ -1,3 +1,8 @@
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("embed") === "1") {
+    document.body.classList.add("embed-mode");
+}
 const WEB_APP_URL =
   "https://script.google.com/macros/s/AKfycbxsEBQObwSNkxXLFNWKH76tqZOsp9tyMQH58BATe5dgbRPB1Z9PHj1Vpz7t1YD_Qjxc9Q/exec";
 
