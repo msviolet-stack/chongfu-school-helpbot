@@ -2,142 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Chongfu School ICT & Admin HelpBot</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-  <link rel="stylesheet" href="style.css" />
+  <meta
+    name="description"
+    content="Chongfu Connect HelpBot"
+  />
+
+  <title>Chongfu Connect HelpBot</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
 </head>
 
 <body>
-  <main class="page-shell">
 
-    <section class="chat-card">
+  <main class="chat-app">
 
-      <div class="chat-header">
-        <div class="bot-badge">🤖</div>
+    <!-- Compact chatbot header -->
+    <header class="chat-header">
 
-        <div>
-          <h2>HelpBot</h2>
-          <p>Find answers from our school’s FAQ</p>
+      <div class="header-left">
+
+        <div
+          class="header-avatar"
+          aria-hidden="true"
+        >
+          🤖
         </div>
 
-        <button
-          id="resetButton"
-          class="icon-button"
-          type="button"
-          title="Start a new chat"
+        <div class="header-text">
+
+          <h1>
+            Chongfu Connect Assistant
+          </h1>
+
+          <p>
+            ICT &amp; Admin HelpBot
+          </p>
+
+        </div>
+
+      </div>
+
+      <button
+        id="resetButton"
+        class="reset-button"
+        type="button"
+        aria-label="Start a new enquiry"
+        title="Start a new enquiry"
+      >
+        ↻
+      </button>
+
+    </header>
+
+
+    <!-- Google Sheet connection status -->
+    <div
+      id="statusBar"
+      class="status-bar"
+      role="status"
+      aria-live="polite"
+    >
+      Connecting to the FAQ sheet…
+    </div>
+
+
+    <!-- Chat conversation area -->
+    <section
+      id="chatMessages"
+      class="chat-messages"
+      aria-live="polite"
+      aria-label="Chat conversation"
+    >
+
+      <div class="message-row bot-row welcome-row">
+
+        <div
+          class="message-avatar"
+          aria-hidden="true"
         >
-          ↻
-        </button>
-      </div>
+          🤖
+        </div>
 
-      <div
-        id="statusBar"
-        class="status-bar"
-        role="status"
-        aria-live="polite"
-      >
-        Connecting to the FAQ sheet…
-      </div>
+        <div class="message bot-message">
 
-      <div
-        id="chatMessages"
-        class="chat-messages"
-        aria-live="polite"
-      >
+          <p>
+            <strong>
+              Hi! I’m the Chongfu Connect Assistant.
+            </strong>
+          </p>
 
-        <div class="message-row bot-row welcome-row">
+          <p>
+            You may ask me an ICT or school-related question.
+          </p>
 
-          <div class="small-avatar">🤖</div>
+          <p class="suggestion-heading">
+            Try asking about:
+          </p>
 
-          <div class="message bot-message welcome-message">
+          <div class="starter-buttons">
 
-            <p>
-              <strong>
-                Hi! I’m the Chongfu School HelpBot.
-              </strong>
-            </p>
+            <button
+              class="starter-button"
+              type="button"
+              data-query="Cockpit parent contact"
+            >
+              Cockpit parent contact
+            </button>
 
-            <p>
-              You can ask me any ICT or school-related question.
-            </p>
+            <button
+              class="starter-button"
+              type="button"
+              data-query="Extra assessment copies"
+            >
+              Extra assessment copies
+            </button>
 
-            <p class="try-label">
-              Try asking about:
-            </p>
-
-            <div class="chips">
-
-              <button
-                class="chip"
-                type="button"
-                data-query="Cockpit parent contact"
-              >
-                Cockpit parent contact
-              </button>
-
-              <button
-                class="chip"
-                type="button"
-                data-query="Extra assessment copies"
-              >
-                Extra assessment copies
-              </button>
-
-              <button
-                class="chip"
-                type="button"
-                data-query="SLS login"
-              >
-                SLS login
-              </button>
-
-            </div>
+            <button
+              class="starter-button"
+              type="button"
+              data-query="SLS login"
+            >
+              SLS login
+            </button>
 
           </div>
+
         </div>
 
       </div>
-
-      <div class="help-note">
-        💡 Try different keywords if the first search does not find the answer.
-      </div>
-
-      <form id="chatForm" class="chat-input-area">
-
-        <label class="sr-only" for="questionInput">
-          Type your question
-        </label>
-
-        <input
-          id="questionInput"
-          type="text"
-          autocomplete="off"
-          maxlength="300"
-          placeholder="Type your question here…"
-          required
-        />
-
-        <button
-          id="sendButton"
-          class="send-button"
-          type="submit"
-          aria-label="Send question"
-        >
-          ➤
-        </button>
-
-      </form>
 
     </section>
 
-    <footer>
-      Answers are based on the school’s approved FAQ information.
-    </footer>
+
+    <!-- Help note -->
+    <div class="help-note">
+
+      <span aria-hidden="true">
+        💡
+      </span>
+
+      <span>
+        Try using a shorter phrase or a key term if no answer is found.
+      </span>
+
+    </div>
+
+
+    <!-- Chat input -->
+    <form
+      id="chatForm"
+      class="chat-input-area"
+    >
+
+      <label
+        class="screen-reader-only"
+        for="questionInput"
+      >
+        Type your question
+      </label>
+
+      <input
+        id="questionInput"
+        type="text"
+        autocomplete="off"
+        maxlength="300"
+        placeholder="Type your question here…"
+        required
+      />
+
+      <button
+        id="sendButton"
+        class="send-button"
+        type="submit"
+        aria-label="Send question"
+      >
+        ➤
+      </button>
+
+    </form>
 
   </main>
 
+
   <script src="script.js"></script>
+
 </body>
 </html>
