@@ -2,7 +2,7 @@
  * IMPORTANT:
  * Replace the URL below with the /exec URL from your deployed Google Apps Script.
  */
-const WEB_APP_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_EXEC_URL_HERE";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxsEBQObwSNkxXLFNWKH76tqZOsp9tyMQH58BATe5dgbRPB1Z9PHj1Vpz7t1YD_Qjxc9Q/exec";
 
 /*
  * Change to true only if you want the internal Rationale shown to users.
