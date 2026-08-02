@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Chongfu School ICT and Admin HelpBot" />
+  <title>Chongfu School ICT & Admin HelpBot</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="brand">
+      <div class="brand-icon" aria-hidden="true">🤖</div>
+      <div>
+        <h1>Chongfu School ICT &amp; Admin HelpBot</h1>
+        <p>Ask a question. Get quick answers.</p>
+      </div>
+    </header>
+
+    <section class="chat-card" aria-label="School help chatbot">
+      <div class="chat-header">
+        <div class="bot-badge" aria-hidden="true">🤖</div>
+        <div>
+          <h2>HelpBot</h2>
+          <p>Find answers from our school’s FAQ</p>
+        </div>
+        <button id="resetButton" class="icon-button" type="button"
+                aria-label="Start a new chat" title="Start a new chat">↻</button>
+      </div>
+
+      <div id="statusBar" class="status-bar" role="status" aria-live="polite">
+        Connecting to the FAQ sheet…
+      </div>
+
+      <div id="chatMessages" class="chat-messages" aria-live="polite">
+        <div class="message-row bot-row">
+          <div class="small-avatar" aria-hidden="true">🤖</div>
+          <div class="message bot-message welcome-message">
+            <p><strong>Hi! I’m the Chongfu School HelpBot.</strong></p>
+            <p>You can ask me any ICT or school-related question.</p>
+            <p class="try-label">Try asking about:</p>
+            <div id="starterChips" class="chips">
+              <button class="chip" type="button" data-query="Cockpit parent contact">Cockpit parent contact</button>
+              <button class="chip" type="button" data-query="Extra assessment copies">Extra assessment copies</button>
+              <button class="chip" type="button" data-query="SLS login">SLS login</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-note">
+        💡 Try different keywords if the first search does not find the answer.
+      </div>
+
+      <form id="chatForm" class="chat-input-area">
+        <label class="sr-only" for="questionInput">Type your question</label>
+        <input
+          id="questionInput"
+          type="text"
+          autocomplete="off"
+          maxlength="300"
+          placeholder="Type your question here…"
+          required
+        />
+        <button id="sendButton" class="send-button" type="submit" aria-label="Send question">
+          ➤
+        </button>
+      </form>
+    </section>
+
+    <footer>
+      Answers are based on the school’s approved FAQ information.
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
