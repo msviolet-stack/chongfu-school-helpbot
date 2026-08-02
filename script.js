@@ -1,19 +1,40 @@
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbxsEBQObwSNkxXLFNWKH76tqZOsp9tyMQH58BATe5dgbRPB1Z9PHj1Vpz7t1YD_Qjxc9Q/exec";
+  "https://script.google.com/macros/s/AKfycbx6Pkz1I2KKZbdt1o1YQpZ9Iaczyk_a0VAjIosqPGZvlrjM7ywLs6wYwT19wGnFP9J1/exec";
 
 const SHOW_RATIONALE = false;
+const MAX_SUGGESTIONS = 5;
+const MAX_CATEGORY_QUESTIONS = 6;
 const MIN_DIRECT_MATCH_SCORE = 8;
-const MAX_SUGGESTIONS = 4;
+
+const CATEGORY_ICONS = {
+  assessment: "📘",
+  ict: "💻",
+  cockpit: "🧭",
+  parents: "👨‍👩‍👧",
+  parent: "👨‍👩‍👧",
+  staff: "👩‍🏫",
+  safety: "🦺",
+  finance: "💰",
+  admin: "📋",
+  student: "🎓",
+  students: "🎓",
+  attendance: "🗓️",
+  school: "🏫",
+  others: "📌",
+  other: "📌"
+};
 
 const STOP_WORDS = new Set([
-  "a", "an", "and", "are", "as", "at", "be", "can", "do",
-  "for", "from", "how", "i", "in", "is", "it", "me", "my",
-  "of", "on", "or", "our", "please", "the", "their", "this",
-  "to", "we", "what", "when", "where", "which", "who", "why",
-  "with", "you", "your"
+  "a", "an", "and", "are", "as", "at", "be", "can", "could",
+  "did", "do", "does", "for", "from", "had", "has", "have",
+  "how", "i", "in", "is", "it", "may", "me", "my", "of",
+  "on", "or", "our", "please", "should", "the", "their",
+  "this", "to", "we", "what", "when", "where", "which",
+  "who", "why", "will", "with", "would", "you", "your"
 ]);
 
 let faqData = [];
+let categoryData = [];
 let chatClosed = false;
 
 const chatForm = document.getElementById("chatForm");
@@ -22,16 +43,12 @@ const sendButton = document.getElementById("sendButton");
 const chatMessages = document.getElementById("chatMessages");
 const resetButton = document.getElementById("resetButton");
 const statusBar = document.getElementById("statusBar");
+const starterButtonsContainer =
+  document.querySelector(".starter-buttons");
 
 document.addEventListener("DOMContentLoaded", () => {
   setInputEnabled(false);
   loadFaqData();
-
-  document.querySelectorAll(".starter-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      submitQuestion(button.dataset.query);
-    });
-  });
 });
 
 chatForm.addEventListener("submit", (event) => {
@@ -46,14 +63,14 @@ resetButton.addEventListener("click", startNewChat);
 ===================================================== */
 
 function loadFaqData() {
-  const callbackName = `receiveFaqData_${Date.now()}`;
+  const callbackName = `receiveHelpBotData_${Date.now()}`;
   const scriptTag = document.createElement("script");
 
   const timeoutId = window.setTimeout(() => {
     cleanup();
 
     setStatus(
-      "The FAQ sheet could not be reached. Check the Apps Script deployment.",
+      "The FAQ information could not be reached. Please check the Apps Script deployment.",
       "error"
     );
   }, 15000);
@@ -67,20 +84,35 @@ function loadFaqData() {
       !Array.isArray(payload.items)
     ) {
       setStatus(
-        payload?.error || "The FAQ data returned an error.",
+        payload?.error ||
+          "The FAQ information could not be loaded.",
         "error"
       );
-
       return;
     }
 
-    faqData = payload.items.filter((item) => item.response);
+    faqData = payload.items
+      .filter((item) => item.question && item.response)
+      .map((item) => ({
+        id: item.id || "",
+        question: String(item.question || "").trim(),
+        category: String(item.category || "").trim(),
+        keywords: String(item.keywords || "").trim(),
+        response: String(item.response || "").trim(),
+        rationale: String(item.rationale || "").trim(),
+        kp: String(item.kp || "").trim()
+      }));
+
+    categoryData = Array.isArray(payload.categories)
+      ? payload.categories.filter(Boolean)
+      : buildCategoriesFromFaq();
+
+    renderCategoryButtons(categoryData);
 
     setInputEnabled(true);
 
-    const lastUpdatedDate = formatLastUpdatedDate(
-      payload.updatedAt
-    );
+    const lastUpdatedDate =
+      formatLastUpdatedDate(payload.updatedAt);
 
     setStatus(
       `Information last updated ${lastUpdatedDate}`,
@@ -94,7 +126,7 @@ function loadFaqData() {
     cleanup();
 
     setStatus(
-      "The FAQ sheet could not be reached. Check the Apps Script deployment.",
+      "The FAQ information could not be reached. Please check the Apps Script deployment.",
       "error"
     );
   };
@@ -116,13 +148,126 @@ function loadFaqData() {
 }
 
 /* =====================================================
+   DYNAMIC CATEGORY BUTTONS
+===================================================== */
+
+function buildCategoriesFromFaq() {
+  return [
+    ...new Set(
+      faqData
+        .map((item) => item.category)
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a.localeCompare(b));
+}
+
+function renderCategoryButtons(categories) {
+  if (!starterButtonsContainer) {
+    return;
+  }
+
+  starterButtonsContainer.innerHTML = "";
+
+  if (!categories.length) {
+    const button = createStarterButton(
+      "View common questions",
+      "common"
+    );
+
+    starterButtonsContainer.appendChild(button);
+    return;
+  }
+
+  categories.forEach((category) => {
+    const icon = getCategoryIcon(category);
+
+    const button = createStarterButton(
+      `${icon} ${category}`,
+      category
+    );
+
+    starterButtonsContainer.appendChild(button);
+  });
+}
+
+function createStarterButton(label, category) {
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "starter-button";
+  button.textContent = label;
+
+  button.addEventListener("click", () => {
+    showCategoryQuestions(category);
+  });
+
+  return button;
+}
+
+function getCategoryIcon(category) {
+  const normalCategory = normalize(category);
+
+  for (const [key, icon] of Object.entries(CATEGORY_ICONS)) {
+    if (normalCategory.includes(key)) {
+      return icon;
+    }
+  }
+
+  return "📌";
+}
+
+function showCategoryQuestions(category) {
+  if (chatClosed) {
+    return;
+  }
+
+  removePendingFeedback();
+
+  const displayCategory =
+    category === "common"
+      ? "Common questions"
+      : category;
+
+  appendUserMessage(displayCategory);
+
+  let items;
+
+  if (category === "common") {
+    items = faqData.slice(0, MAX_CATEGORY_QUESTIONS);
+  } else {
+    items = faqData
+      .filter(
+        (item) =>
+          normalize(item.category) === normalize(category)
+      )
+      .slice(0, MAX_CATEGORY_QUESTIONS);
+  }
+
+  if (!items.length) {
+    appendBotMessage(
+      "There are currently no questions listed under this category."
+    );
+    return;
+  }
+
+  appendQuestionChoices(
+    items,
+    `Here are some ${displayCategory} questions:`
+  );
+}
+
+/* =====================================================
    QUESTION HANDLING
 ===================================================== */
 
 function submitQuestion(rawQuestion) {
   const question = String(rawQuestion || "").trim();
 
-  if (!question || faqData.length === 0 || chatClosed) {
+  if (
+    !question ||
+    faqData.length === 0 ||
+    chatClosed
+  ) {
     return;
   }
 
@@ -133,13 +278,11 @@ function submitQuestion(rawQuestion) {
 
   const matches = rankFaqItems(question);
 
-  if (matches.length === 0 || matches[0].score <= 0) {
-    appendBotMessage(
-      "I’m sorry, I could not find a matching answer. " +
-      "Please try using a shorter phrase or another keyword."
-    );
-
-    appendUnmatchedHelp();
+  if (
+    matches.length === 0 ||
+    matches[0].score <= 0
+  ) {
+    appendNoMatchMessage();
     return;
   }
 
@@ -148,7 +291,10 @@ function submitQuestion(rawQuestion) {
 
   const isClearWinner =
     best.score >= MIN_DIRECT_MATCH_SCORE &&
-    (!second || best.score >= second.score * 1.35);
+    (
+      !second ||
+      best.score >= second.score * 1.35
+    );
 
   if (isClearWinner) {
     appendAnswer(best.item);
@@ -163,12 +309,15 @@ function submitQuestion(rawQuestion) {
   if (suggestions.length === 1) {
     appendAnswer(suggestions[0]);
   } else {
-    appendSuggestions(suggestions);
+    appendQuestionChoices(
+      suggestions,
+      "I found a few related questions. Please select the closest one:"
+    );
   }
 }
 
 /* =====================================================
-   KEYWORD MATCHING
+   SEARCH AND MATCHING
 ===================================================== */
 
 function rankFaqItems(question) {
@@ -197,9 +346,7 @@ function calculateScore(
   const keywordPhrases = splitKeywords(item.keywords);
 
   const searchableText = normalize(
-    `${item.question || ""} ` +
-    `${item.category || ""} ` +
-    `${item.keywords || ""}`
+    `${item.question} ${item.category} ${item.keywords}`
   );
 
   let score = 0;
@@ -216,14 +363,19 @@ function calculateScore(
       normalQuestion.includes(itemQuestion)
     )
   ) {
-    score += 24;
+    score += 28;
   }
 
   if (
     category &&
+    normalQuestion === category
+  ) {
+    score += 25;
+  } else if (
+    category &&
     normalQuestion.includes(category)
   ) {
-    score += 12;
+    score += 14;
   }
 
   keywordPhrases.forEach((phrase) => {
@@ -234,11 +386,11 @@ function calculateScore(
     }
 
     if (normalQuestion === normalPhrase) {
-      score += 30;
+      score += 35;
     } else if (
       normalQuestion.includes(normalPhrase)
     ) {
-      score += 16;
+      score += 18;
     } else {
       const phraseTokens = tokenize(normalPhrase);
 
@@ -246,13 +398,13 @@ function calculateScore(
         questionTokens.includes(token)
       );
 
-      score += matchedTokens.length * 3;
+      score += matchedTokens.length * 4;
     }
   });
 
   questionTokens.forEach((token) => {
     if (searchableText.includes(token)) {
-      score += token.length >= 7 ? 4 : 2;
+      score += token.length >= 7 ? 5 : 3;
     }
   });
 
@@ -324,7 +476,8 @@ function appendAnswer(item) {
     const category = document.createElement("div");
 
     category.className = "answer-category";
-    category.textContent = item.category;
+    category.textContent =
+      `${getCategoryIcon(item.category)} ${item.category}`;
 
     bubble.appendChild(category);
   }
@@ -336,11 +489,15 @@ function appendAnswer(item) {
 
   bubble.appendChild(answer);
 
-  if (SHOW_RATIONALE && item.rationale) {
+  if (
+    SHOW_RATIONALE &&
+    item.rationale
+  ) {
     const rationale = document.createElement("div");
 
     rationale.className = "answer-rationale";
-    rationale.textContent = `Why: ${item.rationale}`;
+    rationale.textContent =
+      `Rationale: ${item.rationale}`;
 
     bubble.appendChild(rationale);
   }
@@ -351,14 +508,15 @@ function appendAnswer(item) {
   scrollToLatest();
 }
 
-function appendSuggestions(items) {
+function appendQuestionChoices(items, introductionText) {
   const row = createBotRow();
   const bubble = row.querySelector(".message");
 
-  const introduction = document.createElement("p");
+  const introduction =
+    document.createElement("p");
 
   introduction.textContent =
-    "I found a few related topics. Please select the closest one:";
+    introductionText;
 
   bubble.appendChild(introduction);
 
@@ -370,14 +528,11 @@ function appendSuggestions(items) {
 
     button.type = "button";
     button.className = "suggestion-button";
-
-    button.textContent =
-      item.question ||
-      item.category ||
-      "View answer";
+    button.textContent = item.question;
 
     button.addEventListener("click", () => {
       row.remove();
+      appendUserMessage(item.question);
       appendAnswer(item);
     });
 
@@ -390,8 +545,32 @@ function appendSuggestions(items) {
   scrollToLatest();
 }
 
+function appendNoMatchMessage() {
+  const row = createBotRow();
+  const bubble = row.querySelector(".message");
+
+  const message = document.createElement("p");
+
+  message.textContent =
+    "I’m sorry, I could not find a matching answer. " +
+    "Please try using a shorter phrase, another keyword or one of the categories above.";
+
+  bubble.appendChild(message);
+
+  const help = document.createElement("p");
+
+  help.style.marginTop = "12px";
+  help.textContent =
+    "You may also approach the relevant department or Key Personnel for clarification.";
+
+  bubble.appendChild(help);
+
+  chatMessages.appendChild(row);
+  scrollToLatest();
+}
+
 /* =====================================================
-   FEEDBACK PROMPT
+   FEEDBACK
 ===================================================== */
 
 function appendFeedbackPrompt(item) {
@@ -441,10 +620,6 @@ function appendFeedbackPrompt(item) {
   scrollToLatest();
 }
 
-/* =====================================================
-   YES RESPONSE
-===================================================== */
-
 function handleYes(feedbackRow) {
   feedbackRow.remove();
 
@@ -473,7 +648,8 @@ function handleYes(feedbackRow) {
 
   restartButton.type = "button";
   restartButton.className = "restart-button";
-  restartButton.textContent = "Start a new enquiry";
+  restartButton.textContent =
+    "Start a new enquiry";
 
   restartButton.addEventListener(
     "click",
@@ -485,10 +661,6 @@ function handleYes(feedbackRow) {
 
   scrollToLatest();
 }
-
-/* =====================================================
-   NO RESPONSE
-===================================================== */
 
 function handleNo(feedbackRow, item) {
   feedbackRow.remove();
@@ -505,8 +677,7 @@ function handleNo(feedbackRow, item) {
 
   introduction.innerHTML =
     "<strong>No problem.</strong><br>" +
-    "You may ask another question below or approach " +
-    "the relevant Key Personnel for clarification.";
+    "You may ask another question below or approach the relevant Key Personnel for clarification.";
 
   bubble.appendChild(introduction);
 
@@ -546,27 +717,7 @@ function handleNo(feedbackRow, item) {
 }
 
 /* =====================================================
-   NO MATCH FOUND
-===================================================== */
-
-function appendUnmatchedHelp() {
-  const row = createBotRow();
-  const bubble = row.querySelector(".message");
-
-  const message = document.createElement("p");
-
-  message.textContent =
-    "You may ask another question or approach the relevant " +
-    "department or Key Personnel for clarification.";
-
-  bubble.appendChild(message);
-  chatMessages.appendChild(row);
-
-  scrollToLatest();
-}
-
-/* =====================================================
-   HELPER FUNCTIONS
+   RESET AND HELPERS
 ===================================================== */
 
 function removePendingFeedback() {
