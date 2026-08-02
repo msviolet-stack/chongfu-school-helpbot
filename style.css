@@ -1,3 +1,16 @@
+/* Hide header when embedded */
+.embed-mode .chat-header {
+    display: none;
+}
+
+/* Remove extra spacing */
+.embed-mode .chat-app {
+    height: 100vh;
+}
+
+.embed-mode .chat-messages {
+    height: calc(100vh - 80px);
+}
 :root{
 
     --primary:#0B5ED7;
