@@ -1,8 +1,3 @@
-const params = new URLSearchParams(window.location.search);
-
-if (params.get("embed") === "1") {
-    document.body.classList.add("embed-mode");
-}
 const WEB_APP_URL =
   "https://script.google.com/macros/s/AKfycbxsEBQObwSNkxXLFNWKH76tqZOsp9tyMQH58BATe5dgbRPB1Z9PHj1Vpz7t1YD_Qjxc9Q/exec";
 
@@ -83,10 +78,12 @@ function loadFaqData() {
 
     setInputEnabled(true);
 
+    const lastUpdatedDate = formatLastUpdatedDate(
+      payload.updatedAt
+    );
+
     setStatus(
-      `${faqData.length} approved FAQ ${
-        faqData.length === 1 ? "answer" : "answers"
-      } ready.`,
+      `Information last updated ${lastUpdatedDate}`,
       "ready"
     );
 
@@ -197,7 +194,6 @@ function calculateScore(
 ) {
   const itemQuestion = normalize(item.question);
   const category = normalize(item.category);
-
   const keywordPhrases = splitKeywords(item.keywords);
 
   const searchableText = normalize(
@@ -627,6 +623,27 @@ function setStatus(message, type = "") {
 function setInputEnabled(enabled) {
   questionInput.disabled = !enabled;
   sendButton.disabled = !enabled;
+}
+
+function formatLastUpdatedDate(dateValue) {
+  if (!dateValue) {
+    return "recently";
+  }
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "recently";
+  }
+
+  return new Intl.DateTimeFormat(
+    "en-SG",
+    {
+      month: "short",
+      year: "numeric",
+      timeZone: "Asia/Singapore"
+    }
+  ).format(date);
 }
 
 function scrollToLatest() {
